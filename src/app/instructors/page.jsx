@@ -1,4 +1,5 @@
 import InstructorCard from "@/components/InstructorCard";
+import SectionTitle from "@/components/SectionTitle";
 import { instructors } from "@/data/instructors";
 
 export const metadata = {
@@ -25,6 +26,10 @@ export default function InstructorsPage() {
       {/* Instructors Grid */}
       <section className="py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionTitle
+            title="Meet Our Instructors"
+            subtitle="Learn from passionate educators with years of industry experience."
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {instructors.map((instructor) => (
               <InstructorCard key={instructor.id} instructor={instructor} />

@@ -1,5 +1,6 @@
-import Link from "next/link";
 import CourseCard from "@/components/CourseCard";
+import Button from "@/components/Button";
+import SectionTitle from "@/components/SectionTitle";
 import { courses } from "@/data/courses";
 
 export default function HomePage() {
@@ -29,18 +30,12 @@ export default function HomePage() {
                 learning and real-world projects.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  href="/courses"
-                  className="bg-yellow-400 text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-yellow-300 transition-colors text-center"
-                >
+                <Button href="/courses" variant="yellow" size="lg">
                   Browse Courses
-                </Link>
-                <Link
-                  href="/instructors"
-                  className="bg-white/10 backdrop-blur px-8 py-3 rounded-lg font-semibold hover:bg-white/20 transition-colors text-center"
-                >
+                </Button>
+                <Button href="/instructors" variant="secondary" size="lg">
                   Meet Our Instructors
-                </Link>
+                </Button>
               </div>
             </div>
             <div className="hidden lg:block">
@@ -114,27 +109,19 @@ export default function HomePage() {
       {/* Featured Courses */}
       <section className="py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Featured Courses
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Handpicked courses to help you kickstart your journey. Each course
-              is designed by industry experts.
-            </p>
-          </div>
+          <SectionTitle
+            title="Featured Courses"
+            subtitle="Handpicked courses to help you kickstart your journey. Each course is designed by industry experts."
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredCourses.map((course) => (
               <CourseCard key={course.slug} course={course} />
             ))}
           </div>
           <div className="text-center mt-12">
-            <Link
-              href="/courses"
-              className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            >
+            <Button href="/courses" size="lg">
               View All Courses
-            </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -142,15 +129,10 @@ export default function HomePage() {
       {/* Why Choose Us */}
       <section className="bg-gray-100 py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose Student Portal?
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              We provide everything you need to succeed in your learning
-              journey.
-            </p>
-          </div>
+          <SectionTitle
+            title="Why Choose Student Portal?"
+            subtitle="We provide everything you need to succeed in your learning journey."
+          />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white rounded-xl p-8 text-center shadow-sm">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -236,12 +218,9 @@ export default function HomePage() {
             Join thousands of students who are building successful careers with
             Student Portal.
           </p>
-          <Link
-            href="/contact"
-            className="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
-          >
+          <Button href="/contact" variant="white" size="lg">
             Contact Us
-          </Link>
+          </Button>
         </div>
       </section>
     </div>

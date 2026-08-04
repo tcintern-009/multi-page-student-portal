@@ -1,35 +1,38 @@
 import Link from "next/link";
+import Button from "@/components/Button";
 
 export default function CourseCard({ course }) {
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col">
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 h-40 flex items-center justify-center">
-        <svg
-          className="w-16 h-16 text-white/90"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M12 14l9-5-9-5-9 5 9 5z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M12 14v7"
-          />
-        </svg>
-      </div>
+      <Link href={`/courses/${course.slug}`} className="group">
+        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 h-40 flex items-center justify-center">
+          <svg
+            className="w-16 h-16 text-white/90"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M12 14l9-5-9-5-9 5 9 5z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M12 14v7"
+            />
+          </svg>
+        </div>
+      </Link>
       <div className="p-6 flex flex-col flex-1">
         <div className="flex items-center justify-between mb-3">
           <span className="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">
@@ -47,7 +50,11 @@ export default function CourseCard({ course }) {
           </span>
         </div>
 
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{course.title}</h3>
+        <Link href={`/courses/${course.slug}`}>
+          <h3 className="text-xl font-bold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
+            {course.title}
+          </h3>
+        </Link>
         <p className="text-gray-600 text-sm mb-4 leading-relaxed flex-1">
           {course.description}
         </p>
@@ -91,12 +98,9 @@ export default function CourseCard({ course }) {
           <span className="text-2xl font-bold text-gray-900">
             ${course.price}
           </span>
-          <Link
-            href={`/courses/${course.slug}`}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
+          <Button href={`/courses/${course.slug}`} size="sm">
             View Course
-          </Link>
+          </Button>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Button from "@/components/Button";
 
 const contactInfo = [
   {
@@ -54,8 +55,8 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
           <h1 className="text-4xl lg:text-5xl font-bold mb-4">Contact Us</h1>
           <p className="text-blue-100 text-lg max-w-2xl">
-            Have questions about our courses? We'd love to hear from you. Send
-            us a message and we'll get back to you within 24 hours.
+            Have questions about our courses? We&#39;d love to hear from you.
+            Send us a message and we&#39;ll get back to you within 24 hours.
           </p>
         </div>
       </section>
@@ -70,7 +71,7 @@ export default function ContactPage() {
                 Get in Touch
               </h2>
               <p className="text-gray-600 mb-8">
-                We're here to help with any questions about our courses,
+                We&#39;re here to help with any questions about our courses,
                 enrollment, or anything else.
               </p>
 
@@ -151,7 +152,7 @@ export default function ContactPage() {
                       />
                     </svg>
                     <span className="font-medium">
-                      Message sent successfully! We'll get back to you soon.
+                      Message sent successfully! We&#39;ll get back to you soon.
                     </span>
                   </div>
                 </div>
@@ -234,12 +235,9 @@ export default function ContactPage() {
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                >
+                <Button type="submit" className="w-full">
                   Send Message
-                </button>
+                </Button>
               </form>
             </div>
           </div>

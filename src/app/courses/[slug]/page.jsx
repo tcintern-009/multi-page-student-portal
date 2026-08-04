@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { courses } from "@/data/courses";
+import { courses, getCourseBySlug } from "@/data/courses";
+import Button from "@/components/Button";
+import SectionTitle from "@/components/SectionTitle";
+import CourseCard from "@/components/CourseCard";
 
 export function generateStaticParams() {
   return courses.map((course) => ({
@@ -10,7 +13,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const course = courses.find((c) => c.slug === slug);
+  const course = getCourseBySlug(slug);
 
   if (!course) {
     return {
@@ -26,15 +29,20 @@ export async function generateMetadata({ params }) {
 
 export default async function CourseDetailPage({ params }) {
   const { slug } = await params;
-  const course = courses.find((c) => c.slug === slug);
+  const course = getCourseBySlug(slug);
 
   if (!course) {
     notFound();
   }
 
-  const relatedCourses = courses
-    .filter((c) => c.slug !== course.slug)
-    .slice(0, 3);
+  // Related courses: same category first, then fill with others
+  const sameCategory = courses.filter(
+    (c) => c.slug !== course.slug && c.category === course.category,
+  );
+  const otherCourses = courses.filter(
+    (c) => c.slug !== course.slug && c.category !== course.category,
+  );
+  const relatedCourses = [...sameCategory, ...otherCourses].slice(0, 3);
 
   return (
     <div>
@@ -147,7 +155,7 @@ export default async function CourseDetailPage({ params }) {
               {/* Topics */}
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  What You'll Learn
+                  What You&#39;ll Learn
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {course.topics.map((topic, index) => (
@@ -229,12 +237,10 @@ export default async function CourseDetailPage({ params }) {
                   ${course.price}
                 </h3>
 
-                <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mb-3">
-                  Enroll Now
-                </button>
-                <button className="w-full border-2 border-blue-600 text-blue-600 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
+                <Button className="w-full mb-3">Enroll Now</Button>
+                <Button variant="outline" className="w-full">
                   Add to Cart
-                </button>
+                </Button>
 
                 <div className="mt-6 space-y-3 text-sm text-gray-600">
                   <div className="flex items-center justify-between">
@@ -269,57 +275,13 @@ export default async function CourseDetailPage({ params }) {
       {/* Related Courses */}
       <section className="bg-gray-100 py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">
-            Related Courses
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <SectionTitle
+            title="Related Courses"
+            subtitle="Continue your learning journey with these related courses"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {relatedCourses.map((related) => (
-              <Link
-                key={related.slug}
-                href={`/courses/${related.slug}`}
-                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 group"
-              >
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 h-32 flex items-center justify-center">
-                  <svg
-                    className="w-12 h-12 text-white/90"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M12 14l9-5-9-5-9 5 9 5z"
-                    />
-                  </svg>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                    {related.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-3">
-                    {related.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <svg
-                        className="w-4 h-4 text-yellow-400 mr-1"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <span className="text-sm text-gray-600">
-                        {related.rating}
-                      </span>
-                    </div>
-                    <span className="text-sm font-bold text-gray-900">
-                      ${related.price}
-                    </span>
-                  </div>
-                </div>
-              </Link>
+              <CourseCard key={related.slug} course={related} />
             ))}
           </div>
         </div>

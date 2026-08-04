@@ -1,17 +1,19 @@
 # Student Course Portal
 
-A modern, multi-page **Student Course Portal** built with **Next.js (App Router)** and **Tailwind CSS**. This project demonstrates file-based routing, shared layouts, dynamic routes, and responsive design in a real-world application.
+A modern, multi-page **Student Course Portal** built with **Next.js (App Router)** and **Tailwind CSS**. This project demonstrates file-based routing, shared layouts, dynamic routes, reusable components, and responsive design in a real-world application.
 
 ## Features
 
 - **Home** – Landing page with hero section, stats, and featured courses
 - **Courses** – Browse all available courses with detailed cards
+- **Course Search** – Client-side search bar to filter courses by title, description, or instructor, plus category filters
 - **Course Details** – Dynamic route for each course (`/courses/web-development`, `/courses/ai-engineering`, etc.)
+- **Related Courses** – Same-category courses displayed at the bottom of each details page
 - **Instructors** – Meet the expert instructors
 - **Contact** – Contact form with validation and success feedback
 - **Custom 404 Page** – Friendly error page for unmatched routes
 - **Fully Responsive** – Mobile-first design using Tailwind CSS
-- **Reusable Components** – Navbar, Footer, CourseCard, InstructorCard
+- **Reusable Components** – Navbar, Footer, CourseCard, InstructorCard, Button, SectionTitle, CourseSearch
 
 ## Getting Started
 
@@ -64,10 +66,13 @@ Student-portal-nextjs/
     ├── components/            # Reusable components
     │   ├── Navbar.jsx         # Responsive navbar with mobile menu
     │   ├── Footer.jsx         # Footer with links & social icons
-    │   ├── CourseCard.jsx     # Reusable course card
-    │   └── InstructorCard.jsx # Reusable instructor card
+    │   ├── CourseCard.jsx     # Reusable course card (links to details)
+    │   ├── InstructorCard.jsx # Reusable instructor card
+    │   ├── Button.jsx         # Reusable button (link or button element)
+    │   ├── SectionTitle.jsx   # Reusable section heading with subtitle
+    │   └── CourseSearch.jsx   # Client-side search + category filter
     └── data/                  # Static data
-        ├── courses.js         # 6 course records
+        ├── courses.js         # 6 course records + getCourseBySlug helper
         └── instructors.js     # 5 instructor records
 ```
 
@@ -76,7 +81,7 @@ Student-portal-nextjs/
 | URL                        | File                              | Description             |
 | -------------------------- | --------------------------------- | ----------------------- |
 | `/`                        | `src/app/page.jsx`                | Home page               |
-| `/courses`                 | `src/app/courses/page.jsx`        | All courses             |
+| `/courses`                 | `src/app/courses/page.jsx`        | All courses + search    |
 | `/courses/web-development` | `src/app/courses/[slug]/page.jsx` | Web Development details |
 | `/courses/ai-engineering`  | `src/app/courses/[slug]/page.jsx` | AI Engineering details  |
 | `/courses/data-science`    | `src/app/courses/[slug]/page.jsx` | Data Science details    |
@@ -86,7 +91,7 @@ Student-portal-nextjs/
 
 ## What We Learned
 
-**Goal:** Learn how modern React applications are structured using Next.js App Router and file-based routing.
+**Goal:** Learn how modern React applications are structured using Next.js App Router, dynamic routes, and reusable components.
 
 ### 1. Next.js App Router vs Traditional React Router
 
@@ -109,36 +114,53 @@ In **Next.js App Router**, there is **no route configuration file**. The file sy
 - **Dynamic routes use `[brackets]`.** The folder `[slug]` matches any value, and you access it via `params.slug`.
 - **Nested routes** are created by nesting folders (e.g., `courses/[slug]/page.jsx`).
 
-### 3. Shared Layouts
+### 3. Dynamic Routes with Static Params
+
+```jsx
+// src/app/courses/[slug]/page.jsx
+export function generateStaticParams() {
+  return courses.map((course) => ({
+    slug: course.slug,
+  }));
+}
+
+export default async function CourseDetailPage({ params }) {
+  const { slug } = await params;
+  const course = getCourseBySlug(slug);
+  // ...
+}
+```
+
+- `generateStaticParams` pre-renders all course detail pages at build time.
+- `generateMetadata` dynamically sets the page title and description for SEO.
+
+### 4. Shared Layouts
 
 - `layout.jsx` wraps all pages in its folder automatically.
 - The root `layout.jsx` includes the shared **Navbar** and **Footer**, so every page gets them without repeating code.
 - Layouts can be nested — each folder can have its own layout.
 
-### 4. Navigation with `next/link`
+### 5. Navigation with `next/link`
 
 - Use `<Link href="/courses">` instead of `<a href="/courses">` for client-side navigation.
 - Dynamic links use template literals: `<Link href={`/courses/${slug}`}>`.
 
-### 5. Dynamic Route Parameters
+### 6. Reusable Components & Composition
 
-```jsx
-// src/app/courses/[slug]/page.jsx
-export default async function CourseDetailPage({ params }) {
-  const { slug } = await params; // "web-development", "ai-engineering", etc.
-  const course = courses.find((c) => c.slug === slug);
-}
-```
-
-### 6. Custom 404 Page
-
-- Create `not-found.jsx` in the `app/` directory to handle all unmatched routes.
-- Use `notFound()` from `next/navigation` to trigger the 404 page for missing data.
+- **Button** – A single component that renders either a `<Link>` (when `href` is passed) or a `<button>` element, with configurable variants and sizes.
+- **SectionTitle** – Standardizes section headings with title, subtitle, and alignment.
+- **CourseCard** – Used on the home page, courses page, and related courses section — demonstrating component composition.
+- **CourseSearch** – A client component that filters courses by search term and category, composing `CourseCard` inside.
 
 ### 7. Client vs Server Components
 
 - **Server Components** (default) render on the server — good for data fetching and SEO.
-- **Client Components** (add `"use client"` at the top) can use hooks like `useState` — needed for interactive features like the Navbar mobile menu and Contact form.
+- **Client Components** (add `"use client"` at the top) can use hooks like `useState` — needed for interactive features like the Navbar mobile menu, Contact form, and CourseSearch.
+
+### 8. Custom 404 Page
+
+- Create `not-found.jsx` in the `app/` directory to handle all unmatched routes.
+- Use `notFound()` from `next/navigation` to trigger the 404 page for missing data.
 
 ## Tech Stack
 

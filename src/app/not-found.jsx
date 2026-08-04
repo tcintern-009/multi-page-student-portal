@@ -9,8 +9,8 @@ export default function NotFound() {
           Page Not Found
         </h1>
         <p className="text-gray-600 max-w-md mx-auto mb-8">
-          Oops! The page you're looking for doesn't exist or has been moved.
-          Let's get you back on track.
+          Oops! The page you&#39;re looking for doesn&#39;t exist or has been
+          moved. Let&#39;s get you back on track.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <Link
