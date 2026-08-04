@@ -36,10 +36,36 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ### Build for Production
 
+This project uses `output: "export"` in `next.config.mjs`, so `npm run build` generates a fully static site in the `out/` directory.
+
 ```bash
 npm run build
-npm start
 ```
+
+To preview the static build locally, serve the `out/` directory:
+
+```bash
+npx serve out
+```
+
+### Deploy to GitHub Pages
+
+This project includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that automatically builds and deploys the site to GitHub Pages on every push to `main`. The workflow:
+
+1. Installs dependencies with `npm ci`
+2. Builds a static export with `next build` (using `output: "export"`)
+3. Uploads the `out/` directory as a Pages artifact
+4. Deploys to GitHub Pages
+
+To enable this:
+
+1. Go to your repository **Settings → Pages**
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**
+3. Push to `main` — the workflow will run automatically
+
+The site will be available at `https://<username>.github.io/multi-page-student-portal/`.
+
+> **Note:** The `next.config.mjs` sets `basePath` to `/multi-page-student-portal` only when the `GITHUB_PAGES` environment variable is `"true"` (set by the workflow). Running locally or building normally does not use the basePath.
 
 ## Project Structure
 
