@@ -1,6 +1,7 @@
 import CourseCard from "@/components/CourseCard";
 import Button from "@/components/Button";
 import SectionTitle from "@/components/SectionTitle";
+import EmptyState from "@/components/EmptyState";
 import { courses } from "@/data/courses";
 
 export default function HomePage() {
@@ -50,27 +51,33 @@ export default function HomePage() {
                   </p>
                 </div>
                 <div className="space-y-4">
-                  {featuredCourses.map((course, index) => (
-                    <div
-                      key={course.slug}
-                      className="flex items-center justify-between bg-white/10 rounded-lg px-4 py-3"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <span className="w-8 h-8 bg-yellow-400 text-gray-900 rounded-full flex items-center justify-center font-bold">
-                          {index + 1}
-                        </span>
-                        <div>
-                          <p className="font-medium">{course.title}</p>
-                          <p className="text-sm text-blue-200">
-                            {course.category}
-                          </p>
+                  {featuredCourses.length > 0 ? (
+                    featuredCourses.map((course, index) => (
+                      <div
+                        key={course.slug}
+                        className="flex items-center justify-between bg-white/10 rounded-lg px-4 py-3"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <span className="w-8 h-8 bg-yellow-400 text-gray-900 rounded-full flex items-center justify-center font-bold">
+                            {index + 1}
+                          </span>
+                          <div>
+                            <p className="font-medium">{course.title}</p>
+                            <p className="text-sm text-blue-200">
+                              {course.category}
+                            </p>
+                          </div>
                         </div>
+                        <span className="text-yellow-400 font-semibold">
+                          ${course.price}
+                        </span>
                       </div>
-                      <span className="text-yellow-400 font-semibold">
-                        ${course.price}
-                      </span>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-blue-100 text-center py-4">
+                      Featured courses coming soon!
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -113,11 +120,18 @@ export default function HomePage() {
             title="Featured Courses"
             subtitle="Handpicked courses to help you kickstart your journey. Each course is designed by industry experts."
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredCourses.map((course) => (
-              <CourseCard key={course.slug} course={course} />
-            ))}
-          </div>
+          {featuredCourses.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredCourses.map((course) => (
+                <CourseCard key={course.slug} course={course} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No featured courses yet"
+              message="Our featured courses are being curated. Check back soon!"
+            />
+          )}
           <div className="text-center mt-12">
             <Button href="/courses" size="lg">
               View All Courses

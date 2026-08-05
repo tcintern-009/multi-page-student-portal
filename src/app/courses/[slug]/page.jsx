@@ -4,6 +4,7 @@ import { courses, getCourseBySlug } from "@/data/courses";
 import Button from "@/components/Button";
 import SectionTitle from "@/components/SectionTitle";
 import CourseCard from "@/components/CourseCard";
+import EmptyState from "@/components/EmptyState";
 
 export function generateStaticParams() {
   return courses.map((course) => ({
@@ -279,11 +280,18 @@ export default async function CourseDetailPage({ params }) {
             title="Related Courses"
             subtitle="Continue your learning journey with these related courses"
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {relatedCourses.map((related) => (
-              <CourseCard key={related.slug} course={related} />
-            ))}
-          </div>
+          {relatedCourses.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {relatedCourses.map((related) => (
+                <CourseCard key={related.slug} course={related} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No related courses found"
+              message="Check back soon for more courses in this category."
+            />
+          )}
         </div>
       </section>
     </div>

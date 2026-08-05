@@ -1,5 +1,6 @@
 import InstructorCard from "@/components/InstructorCard";
 import SectionTitle from "@/components/SectionTitle";
+import EmptyState from "@/components/EmptyState";
 import { instructors } from "@/data/instructors";
 
 export const metadata = {
@@ -30,11 +31,18 @@ export default function InstructorsPage() {
             title="Meet Our Instructors"
             subtitle="Learn from passionate educators with years of industry experience."
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {instructors.map((instructor) => (
-              <InstructorCard key={instructor.id} instructor={instructor} />
-            ))}
-          </div>
+          {instructors.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {instructors.map((instructor) => (
+                <InstructorCard key={instructor.id} instructor={instructor} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No instructors available"
+              message="Our instructor team is being updated. Please check back soon."
+            />
+          )}
         </div>
       </section>
     </div>

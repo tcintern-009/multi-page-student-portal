@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import CourseCard from "@/components/CourseCard";
+import EmptyState from "@/components/EmptyState";
 
 export default function CourseSearch({ courses }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,6 +24,11 @@ export default function CourseSearch({ courses }) {
 
     return matchesSearch && matchesCategory;
   });
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("All");
+  };
 
   return (
     <div>
@@ -71,20 +77,25 @@ export default function CourseSearch({ courses }) {
 
       {/* Results Count */}
       <p className="text-center text-gray-600 mb-8">
-        {filteredCourses.length === 0
-          ? "No courses found. Try adjusting your search."
-          : `Showing ${filteredCourses.length} ${
-              filteredCourses.length === 1 ? "course" : "courses"
-            }`}
+        {`Showing ${filteredCourses.length} ${
+          filteredCourses.length === 1 ? "course" : "courses"
+        }`}
       </p>
 
-      {/* Courses Grid */}
-      {filteredCourses.length > 0 && (
+      {/* Courses Grid or Empty State */}
+      {filteredCourses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredCourses.map((course) => (
             <CourseCard key={course.slug} course={course} />
           ))}
         </div>
+      ) : (
+        <EmptyState
+          title="No courses found"
+          message="Try adjusting your search or filters to find what you're looking for."
+          actionLabel="Clear Filters"
+          onAction={resetFilters}
+        />
       )}
     </div>
   );

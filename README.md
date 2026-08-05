@@ -12,8 +12,10 @@ A modern, multi-page **Student Course Portal** built with **Next.js (App Router)
 - **Instructors** – Meet the expert instructors
 - **Contact** – Contact form with validation and success feedback
 - **Custom 404 Page** – Friendly error page for unmatched routes
+- **Loading States** – Route-level loading UI with animated spinners for every page
+- **Empty States** – Friendly empty-state messages with action buttons when no data is found
 - **Fully Responsive** – Mobile-first design using Tailwind CSS
-- **Reusable Components** – Navbar, Footer, CourseCard, InstructorCard, Button, SectionTitle, CourseSearch
+- **Reusable Components** – Navbar, Footer, CourseCard, InstructorCard, Button, SectionTitle, CourseSearch, LoadingSpinner, EmptyState
 
 ## Getting Started
 
@@ -79,14 +81,18 @@ Student-portal-nextjs/
     ├── app/                   # App Router (file-based routing)
     │   ├── layout.jsx         # Root layout (Navbar + Footer wrapper)
     │   ├── page.jsx           # Home page  →  /
+    │   ├── loading.jsx        # Root loading state
     │   ├── globals.css        # Global Tailwind CSS
     │   ├── not-found.jsx      # Custom 404 page
     │   ├── courses/
     │   │   ├── page.jsx       # Courses page  →  /courses
+    │   │   ├── loading.jsx    # Courses loading state
     │   │   └── [slug]/
-    │   │       └── page.jsx   # Course Detail  →  /courses/:slug
+    │   │       ├── page.jsx   # Course Detail  →  /courses/:slug
+    │   │       └── loading.jsx # Course detail loading state
     │   ├── instructors/
-    │   │   └── page.jsx       # Instructors  →  /instructors
+    │   │   ├── page.jsx       # Instructors  →  /instructors
+    │   │   └── loading.jsx    # Instructors loading state
     │   └── contact/
     │       └── page.jsx       # Contact  →  /contact
     ├── components/            # Reusable components
@@ -96,7 +102,9 @@ Student-portal-nextjs/
     │   ├── InstructorCard.jsx # Reusable instructor card
     │   ├── Button.jsx         # Reusable button (link or button element)
     │   ├── SectionTitle.jsx   # Reusable section heading with subtitle
-    │   └── CourseSearch.jsx   # Client-side search + category filter
+    │   ├── CourseSearch.jsx   # Client-side search + category filter
+    │   ├── LoadingSpinner.jsx # Reusable animated loading spinner
+    │   └── EmptyState.jsx     # Reusable empty state with action button
     └── data/                  # Static data
         ├── courses.js         # 6 course records + getCourseBySlug helper
         └── instructors.js     # 5 instructor records
@@ -187,6 +195,18 @@ export default async function CourseDetailPage({ params }) {
 
 - Create `not-found.jsx` in the `app/` directory to handle all unmatched routes.
 - Use `notFound()` from `next/navigation` to trigger the 404 page for missing data.
+
+### 9. Loading States with `loading.jsx`
+
+- Next.js App Router supports route-level loading UI via `loading.jsx` files.
+- Each route segment can have its own `loading.jsx` that shows while the page data is being fetched.
+- The `LoadingSpinner` component provides a reusable animated spinner with a customizable label.
+
+### 10. Empty States
+
+- The `EmptyState` component provides a friendly message with an optional action button when no data is available.
+- Used on the courses page, instructors page, related courses section, and featured courses section.
+- The course search shows an empty state with a "Clear Filters" button when no courses match the search criteria.
 
 ## Tech Stack
 
