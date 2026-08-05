@@ -4,7 +4,7 @@ A Student Course Portal built with Next.js (App Router) and Tailwind CSS.
 
 ## What We Built Today
 
-Today we focused on **Data Fetching in Next.js**. We made our app more data-driven and added better user experience states.
+- Today we focused on **Data Fetching in Next.js**. We made our app more data-driven and added better user experience states.
 
 ### What We Implemented
 
