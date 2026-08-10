@@ -1,16 +1,7 @@
-import CourseCard from "@/components/CourseCard";
 import Button from "@/components/Button";
-import SectionTitle from "@/components/SectionTitle";
-import EmptyState from "@/components/EmptyState";
-import { courses } from "@/data/courses";
+import FeaturedCoursesSection from "@/components/FeaturedCoursesSection";
 
 export default function HomePage() {
-  const featuredCourses = courses.slice(0, 3);
-  const totalStudents = courses.reduce(
-    (sum, course) => sum + course.students,
-    0,
-  );
-
   return (
     <div>
       {/* Hero Section */}
@@ -50,103 +41,27 @@ export default function HomePage() {
                     Interactive courses designed for real-world success
                   </p>
                 </div>
-                <div className="space-y-4">
-                  {featuredCourses.length > 0 ? (
-                    featuredCourses.map((course, index) => (
-                      <div
-                        key={course.slug}
-                        className="flex items-center justify-between bg-white/10 rounded-lg px-4 py-3"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <span className="w-8 h-8 bg-yellow-400 text-gray-900 rounded-full flex items-center justify-center font-bold">
-                            {index + 1}
-                          </span>
-                          <div>
-                            <p className="font-medium">{course.title}</p>
-                            <p className="text-sm text-blue-200">
-                              {course.category}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-yellow-400 font-semibold">
-                          ${course.price}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-blue-100 text-center py-4">
-                      Featured courses coming soon!
-                    </p>
-                  )}
-                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600 mb-1">
-                {courses.length}+
-              </p>
-              <p className="text-gray-600 text-sm">Courses</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600 mb-1">5</p>
-              <p className="text-gray-600 text-sm">Expert Instructors</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600 mb-1">
-                {totalStudents.toLocaleString()}+
-              </p>
-              <p className="text-gray-600 text-sm">Students</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600 mb-1">4.8</p>
-              <p className="text-gray-600 text-sm">Average Rating</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Courses */}
-      <section className="py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle
-            title="Featured Courses"
-            subtitle="Handpicked courses to help you kickstart your journey. Each course is designed by industry experts."
-          />
-          {featuredCourses.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredCourses.map((course) => (
-                <CourseCard key={course.slug} course={course} />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              title="No featured courses yet"
-              message="Our featured courses are being curated. Check back soon!"
-            />
-          )}
-          <div className="text-center mt-12">
-            <Button href="/courses" size="lg">
-              View All Courses
-            </Button>
-          </div>
-        </div>
-      </section>
+      {/* Stats + Featured Courses (fetched from API) */}
+      <FeaturedCoursesSection />
 
       {/* Why Choose Us */}
       <section className="bg-gray-100 py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle
-            title="Why Choose Student Portal?"
-            subtitle="We provide everything you need to succeed in your learning journey."
-          />
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              Why Choose Student Portal?
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              We provide everything you need to succeed in your learning
+              journey.
+            </p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white rounded-xl p-8 text-center shadow-sm">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">

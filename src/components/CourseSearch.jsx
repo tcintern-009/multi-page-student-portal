@@ -4,7 +4,7 @@ import { useState } from "react";
 import CourseCard from "@/components/CourseCard";
 import EmptyState from "@/components/EmptyState";
 
-export default function CourseSearch({ courses }) {
+export default function CourseSearch({ courses, onEdit, onDelete }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
@@ -86,7 +86,29 @@ export default function CourseSearch({ courses }) {
       {filteredCourses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredCourses.map((course) => (
-            <CourseCard key={course.slug} course={course} />
+            <div key={course.slug} className="flex flex-col">
+              <CourseCard course={course} />
+              {(onEdit || onDelete) && (
+                <div className="flex gap-2 mt-3">
+                  {onEdit && (
+                    <button
+                      onClick={() => onEdit(course)}
+                      className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-blue-50 text-blue-700 text-sm font-semibold rounded-lg hover:bg-blue-100 transition-colors"
+                    >
+                      Edit
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      onClick={() => onDelete(course)}
+                      className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-red-50 text-red-700 text-sm font-semibold rounded-lg hover:bg-red-100 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       ) : (

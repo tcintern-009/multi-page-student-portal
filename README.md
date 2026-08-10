@@ -1,55 +1,98 @@
-# Student Course Portal
+# Student Course Portal - Full Stack (Next.js + Express)
 
-A Student Course Portal built with Next.js (App Router) and Tailwind CSS.
+A full-stack student course portal with a Next.js frontend and an Express.js backend API.
 
-## What We Built Today
+## Project Structure
 
-Today we focused on **Data Fetching in Next.js**. We made our app more data-driven and added better user experience states.
+```
+├── backend/              # Express.js backend API
+│   ├── data/             # In-memory course data
+│   ├── middleware/       # Error-handling middleware
+│   ├── routes/           # API route definitions
+│   ├── .env              # Backend environment variables
+│   ├── package.json      # Backend dependencies
+│   └── server.js         # Express server entry point
+├── src/                  # Next.js frontend
+│   ├── app/              # Next.js pages
+│   ├── components/       # React components
+│   ├── data/             # Static data (fallback)
+│   └── lib/              # API helper functions
+├── .env.local            # Frontend environment variables
+└── package.json          # Frontend dependencies
+```
 
-### What We Implemented
+## Getting Started
 
-- **Course & Instructor Data** – Moved all course and instructor info into separate data files (`src/data/courses.js` and `src/data/instructors.js`). The pages just import and render from these files now.
-- **Dynamic Pages** – Courses and Instructors pages render their cards directly from the data files. No hardcoded content in the pages.
-- **Search Feature** – Added a client-side search bar on the Courses page. You can search by title, description, or instructor, and also filter by category.
-- **Related Courses** – Each course details page shows 3 related courses at the bottom (same category first).
-- **Featured Courses on Home** – The homepage shows the first 3 courses as featured cards.
-- **Loading States** – Added loading spinners for every route using Next.js `loading.jsx` files. When a page is fetching data, users see a nice spinner instead of a blank screen.
-- **Empty States** – Added friendly messages (with a "Clear Filters" button in search) when there's no data to show. This happens on the courses page, instructors page, related courses, and featured courses.
+### 1. Start the Backend (Express API)
 
-### What We Learned
+```bash
+cd backend
+npm install
+npm run dev
+```
 
-- How Next.js separates **server components** (default, good for data) from **client components** (with `"use client"`, needed for things like search).
-- How `loading.jsx` works in the App Router – each route folder can have its own loading state.
-- How to make reusable components (`LoadingSpinner`, `EmptyState`) and reuse them across multiple pages.
-- How component composition keeps pages clean – pages just import and compose smaller building blocks.
+The API will run at `http://localhost:5000`.
 
-## Pages
-
-| Route             | Description                                           |
-| ----------------- | ----------------------------------------------------- |
-| `/`               | Home page with featured courses                       |
-| `/courses`        | All courses with search and category filters          |
-| `/courses/[slug]` | Course details page (e.g. `/courses/web-development`) |
-| `/instructors`    | All instructors                                       |
-| `/contact`        | Contact form                                          |
-| Anything else     | Custom 404 page                                       |
-
-## Run It Locally
+### 2. Start the Frontend (Next.js)
 
 ```bash
 npm install
 npm run dev
 ```
 
-Then open [http://localhost:3000](http://localhost:3000).
+The frontend will run at `http://localhost:3000`.
 
-## Deploy
+## API Endpoints
 
-The repo has a GitHub Actions workflow (`.github/workflows/deploy.yml`) that builds and deploys to GitHub Pages on every push to `main`. In GitHub repo settings, set Pages source to "GitHub Actions".
+| Method | Endpoint           | Description                 |
+| ------ | ------------------ | --------------------------- |
+| GET    | `/api/health`      | Health check                |
+| GET    | `/api/courses`     | Get all courses             |
+| GET    | `/api/courses/:id` | Get a single course by slug |
+| POST   | `/api/courses`     | Create a new course         |
+| PUT    | `/api/courses/:id` | Update a course by slug     |
+| DELETE | `/api/courses/:id` | Delete a course by slug     |
 
-## Tech Stack
+## Environment Variables
 
-- Next.js 16 (App Router)
-- React 19
-- Tailwind CSS 4
-- JavaScript (ES6+)
+### Backend (`backend/.env`)
+
+```
+PORT=5000
+CLIENT_URL=http://localhost:3000
+```
+
+### Frontend (`.env.local`)
+
+```
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+```
+
+## Features
+
+- ✅ Courses fetched from Express API instead of static files
+- ✅ Loading states displayed while requests are running
+- ✅ API errors handled gracefully
+- ✅ Users can add a course through a form
+- ✅ Changes appear in the UI after the API request completes
+- ✅ Edit/Delete functionality from the frontend
+- ✅ Reusable API helper functions
+- ✅ Centralized Express error-handling middleware
+- ✅ CORS enabled
+- ✅ Request validation
+- ✅ HTTP status codes
+- ✅ Environment variables for frontend/backend URLs
+
+## Testing with Postman
+
+1. **GET /api/courses** - Returns all courses
+2. **GET /api/courses/web-development** - Returns a single course
+3. **POST /api/courses** - Create a course (send JSON body)
+4. **PUT /api/courses/:slug** - Update a course
+5. **DELETE /api/courses/:slug** - Delete a course
+
+## Deployment
+
+The backend can be deployed separately to platforms like Render, Railway, or Heroku. The frontend can be deployed to Vercel or GitHub Pages.
+
+For GitHub Pages deployment, set `GITHUB_PAGES=true` and update `NEXT_PUBLIC_API_URL` to point to your deployed backend URL.

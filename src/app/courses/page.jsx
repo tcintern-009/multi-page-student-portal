@@ -1,6 +1,4 @@
-import CourseSearch from "@/components/CourseSearch";
-import EmptyState from "@/components/EmptyState";
-import { courses } from "@/data/courses";
+import CourseManager from "@/components/CourseManager";
 
 export const metadata = {
   title: "Courses | Student Course Portal",
@@ -24,14 +22,7 @@ export default function CoursesPage() {
       {/* Search + Courses Grid */}
       <section className="py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {courses.length > 0 ? (
-            <CourseSearch courses={courses} />
-          ) : (
-            <EmptyState
-              title="No courses available"
-              message="Our course catalog is being updated. Please check back soon."
-            />
-          )}
+          <CourseManager />
         </div>
       </section>
     </div>
