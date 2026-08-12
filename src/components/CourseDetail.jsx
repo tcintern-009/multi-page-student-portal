@@ -5,12 +5,22 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Button from "@/components/Button";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { fetchCourseBySlug } from "@/lib/api";
+import {
+  fetchCourseBySlug,
+  fetchStudents,
+  createStudent,
+  createEnrollment,
+} from "@/lib/api";
 
 export default function CourseDetail({ slug }) {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showEnroll, setShowEnroll] = useState(false);
+  const [enrollForm, setEnrollForm] = useState({ name: "", email: "" });
+  const [enrolling, setEnrolling] = useState(false);
+  const [enrollMessage, setEnrollMessage] = useState(null);
+  const [enrollError, setEnrollError] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -39,6 +49,40 @@ export default function CourseDetail({ slug }) {
   if (!course) {
     return null;
   }
+
+  const handleEnroll = async (e) => {
+    e.preventDefault();
+    setEnrolling(true);
+    setEnrollError(null);
+    setEnrollMessage(null);
+
+    try {
+      const students = await fetchStudents({ search: enrollForm.email.trim() });
+      let student = students.find(
+        (s) => s.email.toLowerCase() === enrollForm.email.trim().toLowerCase(),
+      );
+
+      if (!student) {
+        student = await createStudent({
+          name: enrollForm.name.trim(),
+          email: enrollForm.email.trim(),
+        });
+      }
+
+      await createEnrollment({
+        studentId: student.id,
+        courseSlug: course.slug,
+      });
+
+      setEnrollMessage("Successfully enrolled! Welcome to the course.");
+      setShowEnroll(false);
+      setEnrollForm({ name: "", email: "" });
+    } catch (err) {
+      setEnrollError(err.message);
+    } finally {
+      setEnrolling(false);
+    }
+  };
 
   return (
     <div>
@@ -218,10 +262,78 @@ export default function CourseDetail({ slug }) {
                 <h3 className="text-3xl font-bold text-gray-900 mb-6">
                   ${course.price}
                 </h3>
-                <Button className="w-full mb-3">Enroll Now</Button>
+                {enrollMessage && (
+                  <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+                    {enrollMessage}
+                  </div>
+                )}
+                <Button
+                  className="w-full mb-3"
+                  onClick={() => {
+                    setShowEnroll(true);
+                    setEnrollError(null);
+                  }}
+                >
+                  Enroll Now
+                </Button>
                 <Button variant="outline" className="w-full">
                   Add to Cart
                 </Button>
+
+                {showEnroll && (
+                  <form
+                    onSubmit={handleEnroll}
+                    className="mt-6 pt-6 border-t border-gray-200 space-y-4"
+                  >
+                    <h4 className="font-semibold text-gray-900">Enroll in this course</h4>
+                    {enrollError && (
+                      <p className="text-sm text-red-600">{enrollError}</p>
+                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Full Name
+                      </label>
+                      <input
+                        required
+                        value={enrollForm.name}
+                        onChange={(e) =>
+                          setEnrollForm((prev) => ({ ...prev, name: e.target.value }))
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                      </label>
+                      <input
+                        required
+                        type="email"
+                        value={enrollForm.email}
+                        onChange={(e) =>
+                          setEnrollForm((prev) => ({ ...prev, email: e.target.value }))
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        disabled={enrolling}
+                        className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {enrolling ? "Enrolling..." : "Confirm Enrollment"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowEnroll(false)}
+                        className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
                 <div className="mt-6 space-y-3 text-sm text-gray-600">
                   <div className="flex items-center justify-between">
                     <span>Duration</span>

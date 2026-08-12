@@ -6,18 +6,23 @@ import Button from "@/components/Button";
 import SectionTitle from "@/components/SectionTitle";
 import EmptyState from "@/components/EmptyState";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { fetchCourses } from "@/lib/api";
+import { fetchCourses, fetchInstructors } from "@/lib/api";
 
 export default function FeaturedCoursesSection() {
   const [courses, setCourses] = useState([]);
+  const [instructorCount, setInstructorCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await fetchCourses();
-        setCourses(data);
+        const [courseData, instructorData] = await Promise.all([
+          fetchCourses(),
+          fetchInstructors(),
+        ]);
+        setCourses(courseData);
+        setInstructorCount(instructorData.length);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -32,6 +37,13 @@ export default function FeaturedCoursesSection() {
     (sum, course) => sum + course.students,
     0,
   );
+  const avgRating =
+    courses.length > 0
+      ? (
+          courses.reduce((sum, course) => sum + course.rating, 0) /
+          courses.length
+        ).toFixed(1)
+      : "4.8";
 
   return (
     <div>
@@ -45,17 +57,21 @@ export default function FeaturedCoursesSection() {
               <p className="text-gray-600 text-sm">Courses</p>
             </div>
             <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600 mb-1">5</p>
+              <p className="text-3xl font-bold text-blue-600 mb-1">
+                {loading ? "..." : instructorCount}
+              </p>
               <p className="text-gray-600 text-sm">Expert Instructors</p>
             </div>
             <div className="text-center">
               <p className="text-3xl font-bold text-blue-600 mb-1">
-                {totalStudents.toLocaleString()}+
+                {loading ? "..." : `${totalStudents.toLocaleString()}+`}
               </p>
               <p className="text-gray-600 text-sm">Students</p>
             </div>
             <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600 mb-1">4.8</p>
+              <p className="text-3xl font-bold text-blue-600 mb-1">
+                {loading ? "..." : avgRating}
+              </p>
               <p className="text-gray-600 text-sm">Average Rating</p>
             </div>
           </div>

@@ -1,25 +1,69 @@
-# Student Course Portal - Full Stack (Next.js + Express)
+# Student Course Portal - Full Stack (Next.js + Express + PostgreSQL)
 
-A full-stack student course portal with a Next.js frontend and an Express.js backend API.
+A full-stack student course portal with a Next.js frontend, Express.js backend API, and PostgreSQL database hosted on [Neon](https://neon.tech).
+
+## Architecture
+
+```
+Next.js Frontend → Express API → PostgreSQL (Neon) → Express → Frontend
+```
 
 ## Project Structure
 
 ```
 ├── backend/              # Express.js backend API
-│   ├── data/             # In-memory course data
+│   ├── config/           # Database connection (PostgreSQL pool)
+│   ├── db/               # Schema, setup, and seed scripts
 │   ├── middleware/       # Error-handling middleware
-│   ├── routes/           # API route definitions
-│   ├── .env              # Backend environment variables
-│   ├── package.json      # Backend dependencies
-│   └── server.js         # Express server entry point
+│   ├── routes/           # API routes (courses, instructors, students, enrollments)
+│   ├── utils/            # Validation, pagination, formatters
+│   ├── .env.example      # Environment variable template
+│   ├── package.json
+│   └── server.js
 ├── src/                  # Next.js frontend
 │   ├── app/              # Next.js pages
 │   ├── components/       # React components
-│   ├── data/             # Static data (fallback)
 │   └── lib/              # API helper functions
 ├── .env.local            # Frontend environment variables
-└── package.json          # Frontend dependencies
+└── package.json
 ```
+
+## Database Setup (Neon PostgreSQL)
+
+### 1. Create a Neon database
+
+1. Go to [https://neon.tech](https://neon.tech) and sign up / log in
+2. Create a new project (e.g. `student-portal`)
+3. Copy the **connection string** from the dashboard (Connection Details → Connection string)
+
+### 2. Configure backend environment
+
+Create `backend/.env` from the example:
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Edit `backend/.env`:
+
+```
+PORT=5000
+CLIENT_URL=http://localhost:3000
+DATABASE_URL=postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require
+```
+
+Replace `DATABASE_URL` with your Neon connection string.
+
+### 3. Install dependencies and seed the database
+
+```bash
+cd backend
+npm install
+npm run db:seed
+```
+
+This creates all tables and inserts sample instructors, courses, students, and enrollments.
 
 ## Getting Started
 
@@ -31,7 +75,7 @@ npm install
 npm run dev
 ```
 
-The API will run at `http://localhost:5000`.
+The API runs at `http://localhost:5000`.
 
 ### 2. Start the Frontend (Next.js)
 
@@ -40,18 +84,75 @@ npm install
 npm run dev
 ```
 
-The frontend will run at `http://localhost:3000`.
+The frontend runs at `http://localhost:3000`.
 
 ## API Endpoints
 
-| Method | Endpoint           | Description                 |
-| ------ | ------------------ | --------------------------- |
-| GET    | `/api/health`      | Health check                |
-| GET    | `/api/courses`     | Get all courses             |
-| GET    | `/api/courses/:id` | Get a single course by slug |
-| POST   | `/api/courses`     | Create a new course         |
-| PUT    | `/api/courses/:id` | Update a course by slug     |
-| DELETE | `/api/courses/:id` | Delete a course by slug     |
+### Health
+
+| Method | Endpoint      | Description                    |
+| ------ | ------------- | ------------------------------ |
+| GET    | `/api/health` | Health check + DB connectivity |
+
+### Courses
+
+| Method | Endpoint           | Description                          |
+| ------ | ------------------ | ------------------------------------ |
+| GET    | `/api/courses`     | List courses (search, filter, pagination) |
+| GET    | `/api/courses/:id` | Get course by slug                   |
+| POST   | `/api/courses`     | Create course                        |
+| PUT    | `/api/courses/:id` | Update course by slug                |
+| DELETE | `/api/courses/:id` | Delete course by slug                |
+
+**Query params (GET):** `search`, `category`, `level`, `page`, `limit`
+
+### Instructors
+
+| Method | Endpoint               | Description              |
+| ------ | ---------------------- | ------------------------ |
+| GET    | `/api/instructors`     | List instructors           |
+| GET    | `/api/instructors/:id` | Get instructor by ID       |
+| POST   | `/api/instructors`     | Create instructor          |
+| PUT    | `/api/instructors/:id` | Update instructor          |
+| DELETE | `/api/instructors/:id` | Delete instructor          |
+
+**Query params (GET):** `search`, `page`, `limit`
+
+### Students
+
+| Method | Endpoint            | Description                    |
+| ------ | ------------------- | ------------------------------ |
+| GET    | `/api/students`     | List students                  |
+| GET    | `/api/students/:id` | Get student with enrollments   |
+| POST   | `/api/students`     | Create student                 |
+| PUT    | `/api/students/:id` | Update student                 |
+| DELETE | `/api/students/:id` | Delete student                 |
+
+**Query params (GET):** `search`, `page`, `limit`
+
+### Enrollments
+
+| Method | Endpoint               | Description              |
+| ------ | ---------------------- | ------------------------ |
+| GET    | `/api/enrollments`     | List enrollments         |
+| GET    | `/api/enrollments/:id` | Get enrollment by ID     |
+| POST   | `/api/enrollments`     | Create enrollment        |
+| PUT    | `/api/enrollments/:id` | Update enrollment status |
+| DELETE | `/api/enrollments/:id` | Delete enrollment        |
+
+**Query params (GET):** `studentId`, `courseId`, `status`, `page`, `limit`
+
+## Database Schema
+
+```
+instructors (1) ──< courses (many)
+students (many) >──< enrollments >── courses (many)
+```
+
+- **instructors** — name, role, bio, expertise, rating, students
+- **courses** — slug, title, category, description, instructor_id (FK)
+- **students** — name, email (unique), phone
+- **enrollments** — student_id + course_id (unique), status
 
 ## Environment Variables
 
@@ -60,6 +161,8 @@ The frontend will run at `http://localhost:3000`.
 ```
 PORT=5000
 CLIENT_URL=http://localhost:3000
+DATABASE_URL=postgresql://...
+NODE_ENV=production   # when deploying
 ```
 
 ### Frontend (`.env.local`)
@@ -68,31 +171,58 @@ CLIENT_URL=http://localhost:3000
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```
 
-## Features
-
-- ✅ Courses fetched from Express API instead of static files
-- ✅ Loading states displayed while requests are running
-- ✅ API errors handled gracefully
-- ✅ Users can add a course through a form
-- ✅ Changes appear in the UI after the API request completes
-- ✅ Edit/Delete functionality from the frontend
-- ✅ Reusable API helper functions
-- ✅ Centralized Express error-handling middleware
-- ✅ CORS enabled
-- ✅ Request validation
-- ✅ HTTP status codes
-- ✅ Environment variables for frontend/backend URLs
-
 ## Testing with Postman
 
-1. **GET /api/courses** - Returns all courses
-2. **GET /api/courses/web-development** - Returns a single course
-3. **POST /api/courses** - Create a course (send JSON body)
-4. **PUT /api/courses/:slug** - Update a course
-5. **DELETE /api/courses/:slug** - Delete a course
+1. **GET** `http://localhost:5000/api/health` — verify DB connection
+2. **GET** `http://localhost:5000/api/courses` — list all courses
+3. **GET** `http://localhost:5000/api/courses/web-development` — single course
+4. **GET** `http://localhost:5000/api/instructors` — list instructors
+5. **GET** `http://localhost:5000/api/students` — list students
+6. **GET** `http://localhost:5000/api/enrollments` — list enrollments
+7. **POST** `http://localhost:5000/api/courses` — create course (JSON body)
+8. **POST** `http://localhost:5000/api/enrollments` — enroll a student
+
+Example enrollment body:
+
+```json
+{
+  "studentId": 1,
+  "courseSlug": "web-development"
+}
+```
 
 ## Deployment
 
-The backend can be deployed separately to platforms like Render, Railway, or Heroku. The frontend can be deployed to Vercel or GitHub Pages.
+### Backend (Render / Railway)
 
-For GitHub Pages deployment, set `GITHUB_PAGES=true` and update `NEXT_PUBLIC_API_URL` to point to your deployed backend URL.
+1. Push your code to GitHub
+2. Create a new Web Service on [Render](https://render.com) or [Railway](https://railway.app)
+3. Set root directory to `backend`
+4. Build command: `npm install`
+5. Start command: `npm start`
+6. Add environment variables:
+   - `DATABASE_URL` — your Neon connection string
+   - `CLIENT_URL` — your deployed frontend URL
+   - `NODE_ENV=production`
+7. Run seed once: `npm run db:seed` (via shell/one-off job)
+
+### Frontend (Vercel / GitHub Pages)
+
+Set `NEXT_PUBLIC_API_URL` to your deployed backend URL, e.g.:
+
+```
+NEXT_PUBLIC_API_URL=https://your-backend.onrender.com/api
+```
+
+For GitHub Pages, set `GITHUB_PAGES=true` and configure the API URL in your workflow or `.env.local`.
+
+## Features
+
+- PostgreSQL database on Neon with relational schema
+- Full CRUD for courses, instructors, students, and enrollments
+- Search, filtering, and pagination on list endpoints
+- Validation and PostgreSQL error handling
+- Frontend connected to database-backed API
+- Course enrollment from the course detail page
+- Students management page
+- Instructors fetched from the database

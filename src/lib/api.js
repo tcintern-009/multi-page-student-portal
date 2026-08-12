@@ -30,7 +30,6 @@ async function request(path, options = {}) {
     try {
         data = await response.json();
     } catch {
-        // No JSON body returned
         data = null;
     }
 
@@ -46,19 +45,29 @@ async function request(path, options = {}) {
     return data;
 }
 
-// GET /api/courses
-export async function fetchCourses() {
-    const data = await request("/courses");
+function buildQuery(params = {}) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+            searchParams.set(key, String(value));
+        }
+    });
+    const query = searchParams.toString();
+    return query ? `?${query}` : "";
+}
+
+// --- Courses ---
+
+export async function fetchCourses(params = {}) {
+    const data = await request(`/courses${buildQuery(params)}`);
     return data.courses;
 }
 
-// GET /api/courses/:slug
 export async function fetchCourseBySlug(slug) {
     const data = await request(`/courses/${slug}`);
     return data.course;
 }
 
-// POST /api/courses
 export async function createCourse(courseData) {
     const data = await request("/courses", {
         method: "POST",
@@ -67,7 +76,6 @@ export async function createCourse(courseData) {
     return data.course;
 }
 
-// PUT /api/courses/:slug
 export async function updateCourse(slug, courseData) {
     const data = await request(`/courses/${slug}`, {
         method: "PUT",
@@ -76,10 +84,95 @@ export async function updateCourse(slug, courseData) {
     return data.course;
 }
 
-// DELETE /api/courses/:slug
 export async function deleteCourse(slug) {
-    const data = await request(`/courses/${slug}`, {
-        method: "DELETE",
+    return request(`/courses/${slug}`, { method: "DELETE" });
+}
+
+// --- Instructors ---
+
+export async function fetchInstructors(params = {}) {
+    const data = await request(`/instructors${buildQuery(params)}`);
+    return data.instructors;
+}
+
+export async function fetchInstructorById(id) {
+    const data = await request(`/instructors/${id}`);
+    return data.instructor;
+}
+
+export async function createInstructor(instructorData) {
+    const data = await request("/instructors", {
+        method: "POST",
+        body: JSON.stringify(instructorData),
     });
-    return data;
+    return data.instructor;
+}
+
+export async function updateInstructor(id, instructorData) {
+    const data = await request(`/instructors/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(instructorData),
+    });
+    return data.instructor;
+}
+
+export async function deleteInstructor(id) {
+    return request(`/instructors/${id}`, { method: "DELETE" });
+}
+
+// --- Students ---
+
+export async function fetchStudents(params = {}) {
+    const data = await request(`/students${buildQuery(params)}`);
+    return data.students;
+}
+
+export async function fetchStudentById(id) {
+    const data = await request(`/students/${id}`);
+    return data.student;
+}
+
+export async function createStudent(studentData) {
+    const data = await request("/students", {
+        method: "POST",
+        body: JSON.stringify(studentData),
+    });
+    return data.student;
+}
+
+export async function updateStudent(id, studentData) {
+    const data = await request(`/students/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(studentData),
+    });
+    return data.student;
+}
+
+export async function deleteStudent(id) {
+    return request(`/students/${id}`, { method: "DELETE" });
+}
+
+// --- Enrollments ---
+
+export async function fetchEnrollments(params = {}) {
+    const data = await request(`/enrollments${buildQuery(params)}`);
+    return data.enrollments;
+}
+
+export async function createEnrollment(enrollmentData) {
+    const data = await request("/enrollments", {
+        method: "POST",
+        body: JSON.stringify(enrollmentData),
+    });
+    return data.enrollment;
+}
+
+export async function deleteEnrollment(id) {
+    return request(`/enrollments/${id}`, { method: "DELETE" });
+}
+
+// --- Health ---
+
+export async function fetchHealth() {
+    return request("/health");
 }

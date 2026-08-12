@@ -1,152 +1,278 @@
 import { Router } from "express";
-import { courses } from "../data/courses.js";
+import { query } from "../config/db.js";
+import { generateSlug } from "../utils/slug.js";
+import { parsePagination, buildPaginationMeta } from "../utils/pagination.js";
+import { validateCourse, validationError } from "../utils/validation.js";
+import { formatCourse } from "../utils/formatters.js";
 
 const router = Router();
 
-// Helper to find a course by slug
-function findCourse(slug) {
-    return courses.find((course) => course.slug === slug);
+const COURSE_SELECT = `
+    SELECT c.*, i.name AS instructor_name
+    FROM courses c
+    LEFT JOIN instructors i ON c.instructor_id = i.id
+`;
+
+async function resolveInstructorId({ instructor, instructorId }) {
+    if (instructorId !== undefined) {
+        const result = await query("SELECT id FROM instructors WHERE id = $1", [instructorId]);
+        if (result.rows.length === 0) {
+            const error = new Error(`Instructor with id ${instructorId} not found`);
+            error.status = 404;
+            throw error;
+        }
+        return result.rows[0].id;
+    }
+
+    if (instructor) {
+        const result = await query("SELECT id FROM instructors WHERE name ILIKE $1 LIMIT 1", [
+            instructor.trim(),
+        ]);
+        if (result.rows.length === 0) {
+            const error = new Error(`Instructor "${instructor}" not found. Create the instructor first.`);
+            error.status = 404;
+            throw error;
+        }
+        return result.rows[0].id;
+    }
+
+    return null;
 }
 
-// Helper to generate a slug from a title
-function generateSlug(title) {
-    return title
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-");
+async function findCourseBySlug(slug) {
+    const result = await query(`${COURSE_SELECT} WHERE c.slug = $1`, [slug]);
+    return result.rows[0] || null;
 }
 
-// Validate required course fields for POST/PUT
-function validateCourse(body) {
-    const errors = [];
-    if (!body.title || typeof body.title !== "string" || !body.title.trim()) {
-        errors.push("title is required");
-    }
-    if (!body.category || typeof body.category !== "string" || !body.category.trim()) {
-        errors.push("category is required");
-    }
-    if (!body.instructor || typeof body.instructor !== "string" || !body.instructor.trim()) {
-        errors.push("instructor is required");
-    }
-    if (!body.description || typeof body.description !== "string" || !body.description.trim()) {
-        errors.push("description is required");
-    }
-    if (body.price !== undefined && (typeof body.price !== "number" || body.price < 0)) {
-        errors.push("price must be a non-negative number");
-    }
-    return errors;
-}
+// GET /api/courses
+router.get("/", async (req, res, next) => {
+    try {
+        const { page, limit, offset } = parsePagination(req.query);
+        const { search, category, level } = req.query;
+        const usePagination = req.query.page !== undefined || req.query.limit !== undefined;
 
-// GET /api/courses - list all courses
-router.get("/", (req, res) => {
-    res.json({ courses });
+        const conditions = [];
+        const params = [];
+
+        if (search) {
+            params.push(`%${search.trim()}%`);
+            conditions.push(
+                `(c.title ILIKE $${params.length} OR c.description ILIKE $${params.length} OR i.name ILIKE $${params.length})`,
+            );
+        }
+        if (category) {
+            params.push(category.trim());
+            conditions.push(`c.category ILIKE $${params.length}`);
+        }
+        if (level) {
+            params.push(level.trim());
+            conditions.push(`c.level ILIKE $${params.length}`);
+        }
+
+        const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+
+        if (usePagination) {
+            const countResult = await query(
+                `SELECT COUNT(*)::int AS total
+                 FROM courses c
+                 LEFT JOIN instructors i ON c.instructor_id = i.id
+                 ${whereClause}`,
+                params,
+            );
+            const total = countResult.rows[0].total;
+
+            const listParams = [...params, limit, offset];
+            const result = await query(
+                `${COURSE_SELECT} ${whereClause}
+                 ORDER BY c.created_at DESC
+                 LIMIT $${listParams.length - 1} OFFSET $${listParams.length}`,
+                listParams,
+            );
+
+            return res.json({
+                courses: result.rows.map(formatCourse),
+                pagination: buildPaginationMeta(page, limit, total),
+            });
+        }
+
+        const result = await query(
+            `${COURSE_SELECT} ${whereClause} ORDER BY c.created_at DESC`,
+            params,
+        );
+
+        res.json({ courses: result.rows.map(formatCourse) });
+    } catch (err) {
+        next(err);
+    }
 });
 
-// GET /api/courses/:id - get a single course by slug
-router.get("/:id", (req, res, next) => {
-    const course = findCourse(req.params.id);
-    if (!course) {
-        const error = new Error(`Course with slug "${req.params.id}" not found`);
-        error.status = 404;
-        return next(error);
+// GET /api/courses/:id
+router.get("/:id", async (req, res, next) => {
+    try {
+        const course = await findCourseBySlug(req.params.id);
+        if (!course) {
+            const error = new Error(`Course with slug "${req.params.id}" not found`);
+            error.status = 404;
+            return next(error);
+        }
+        res.json({ course: formatCourse(course) });
+    } catch (err) {
+        next(err);
     }
-    res.json({ course });
 });
 
-// POST /api/courses - create a new course
-router.post("/", (req, res, next) => {
-    const errors = validateCourse(req.body);
-    if (errors.length > 0) {
-        const error = new Error(`Validation failed: ${errors.join(", ")}`);
-        error.status = 400;
-        return next(error);
+// POST /api/courses
+router.post("/", async (req, res, next) => {
+    try {
+        const errors = validateCourse(req.body);
+        if (errors.length) return next(validationError(errors));
+
+        const {
+            title,
+            category,
+            description,
+            longDescription,
+            instructor,
+            instructorId,
+            duration,
+            level,
+            students,
+            rating,
+            price,
+            image,
+            topics,
+        } = req.body;
+
+        const slug = generateSlug(title);
+        const existing = await query("SELECT id FROM courses WHERE slug = $1", [slug]);
+        if (existing.rows.length > 0) {
+            const error = new Error(`A course with the title "${title}" already exists`);
+            error.status = 409;
+            return next(error);
+        }
+
+        const resolvedInstructorId = await resolveInstructorId({ instructor, instructorId });
+
+        const result = await query(
+            `INSERT INTO courses (
+                slug, title, category, description, long_description, instructor_id,
+                duration, level, students, rating, price, image, topics
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+             RETURNING *`,
+            [
+                slug,
+                title.trim(),
+                category.trim(),
+                description.trim(),
+                longDescription || description.trim(),
+                resolvedInstructorId,
+                duration || "12 weeks",
+                level || "Beginner",
+                students ?? 0,
+                rating ?? 4.5,
+                price ?? 99,
+                image || "/images/default-course.svg",
+                Array.isArray(topics) ? topics : [],
+            ],
+        );
+
+        const created = await findCourseBySlug(result.rows[0].slug);
+        res.status(201).json({ course: formatCourse(created) });
+    } catch (err) {
+        next(err);
     }
-
-    const { title, category, description, longDescription, instructor, duration, level, students, rating, price, image, topics } = req.body;
-
-    const newCourse = {
-        slug: generateSlug(title),
-        title: title.trim(),
-        category: category.trim(),
-        description: description.trim(),
-        longDescription: longDescription || description,
-        instructor: instructor.trim(),
-        duration: duration || "12 weeks",
-        level: level || "Beginner",
-        students: students || 0,
-        rating: rating || 4.5,
-        price: price !== undefined ? price : 99,
-        image: image || "/images/default-course.svg",
-        topics: Array.isArray(topics) ? topics : [],
-    };
-
-    // Check for duplicate slug
-    if (findCourse(newCourse.slug)) {
-        const error = new Error(`A course with the title "${title}" already exists`);
-        error.status = 409;
-        return next(error);
-    }
-
-    courses.push(newCourse);
-    res.status(201).json({ course: newCourse });
 });
 
-// PUT /api/courses/:id - update a course by slug
-router.put("/:id", (req, res, next) => {
-    const course = findCourse(req.params.id);
-    if (!course) {
-        const error = new Error(`Course with slug "${req.params.id}" not found`);
-        error.status = 404;
-        return next(error);
+// PUT /api/courses/:id
+router.put("/:id", async (req, res, next) => {
+    try {
+        const existing = await findCourseBySlug(req.params.id);
+        if (!existing) {
+            const error = new Error(`Course with slug "${req.params.id}" not found`);
+            error.status = 404;
+            return next(error);
+        }
+
+        const errors = validateCourse(req.body);
+        if (errors.length) return next(validationError(errors));
+
+        const {
+            title,
+            category,
+            description,
+            longDescription,
+            instructor,
+            instructorId,
+            duration,
+            level,
+            students,
+            rating,
+            price,
+            image,
+            topics,
+        } = req.body;
+
+        const newSlug = generateSlug(title);
+        if (newSlug !== existing.slug) {
+            const duplicate = await query("SELECT id FROM courses WHERE slug = $1", [newSlug]);
+            if (duplicate.rows.length > 0) {
+                const error = new Error(`A course with the title "${title}" already exists`);
+                error.status = 409;
+                return next(error);
+            }
+        }
+
+        const resolvedInstructorId = await resolveInstructorId({ instructor, instructorId });
+
+        await query(
+            `UPDATE courses SET
+                slug = $1, title = $2, category = $3, description = $4, long_description = $5,
+                instructor_id = $6, duration = $7, level = $8, students = $9, rating = $10,
+                price = $11, image = $12, topics = $13, updated_at = NOW()
+             WHERE id = $14`,
+            [
+                newSlug,
+                title.trim(),
+                category.trim(),
+                description.trim(),
+                longDescription || existing.long_description,
+                resolvedInstructorId,
+                duration || existing.duration,
+                level || existing.level,
+                students ?? existing.students,
+                rating ?? existing.rating,
+                price ?? existing.price,
+                image || existing.image,
+                Array.isArray(topics) ? topics : existing.topics,
+                existing.id,
+            ],
+        );
+
+        const updated = await findCourseBySlug(newSlug);
+        res.json({ course: formatCourse(updated) });
+    } catch (err) {
+        next(err);
     }
-
-    const errors = validateCourse(req.body);
-    if (errors.length > 0) {
-        const error = new Error(`Validation failed: ${errors.join(", ")}`);
-        error.status = 400;
-        return next(error);
-    }
-
-    const { title, category, description, longDescription, instructor, duration, level, students, rating, price, image, topics } = req.body;
-
-    // If title changed, generate a new slug (but keep old slug if unchanged)
-    const newSlug = generateSlug(title);
-    if (newSlug !== course.slug && findCourse(newSlug)) {
-        const error = new Error(`A course with the title "${title}" already exists`);
-        error.status = 409;
-        return next(error);
-    }
-
-    course.slug = newSlug;
-    course.title = title.trim();
-    course.category = category.trim();
-    course.description = description.trim();
-    course.longDescription = longDescription || course.longDescription;
-    course.instructor = instructor.trim();
-    if (duration) course.duration = duration;
-    if (level) course.level = level;
-    if (students !== undefined) course.students = students;
-    if (rating !== undefined) course.rating = rating;
-    if (price !== undefined) course.price = price;
-    if (image) course.image = image;
-    if (Array.isArray(topics)) course.topics = topics;
-
-    res.json({ course });
 });
 
-// DELETE /api/courses/:id - delete a course by slug
-router.delete("/:id", (req, res, next) => {
-    const index = courses.findIndex((course) => course.slug === req.params.id);
-    if (index === -1) {
-        const error = new Error(`Course with slug "${req.params.id}" not found`);
-        error.status = 404;
-        return next(error);
-    }
+// DELETE /api/courses/:id
+router.delete("/:id", async (req, res, next) => {
+    try {
+        const existing = await findCourseBySlug(req.params.id);
+        if (!existing) {
+            const error = new Error(`Course with slug "${req.params.id}" not found`);
+            error.status = 404;
+            return next(error);
+        }
 
-    const [deleted] = courses.splice(index, 1);
-    res.json({ message: "Course deleted successfully", course: deleted });
+        await query("DELETE FROM courses WHERE id = $1", [existing.id]);
+        res.json({
+            message: "Course deleted successfully",
+            course: formatCourse(existing),
+        });
+    } catch (err) {
+        next(err);
+    }
 });
 
 export default router;
