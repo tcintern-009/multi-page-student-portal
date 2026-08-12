@@ -2,7 +2,8 @@
 const isGithubPages = process.env.GITHUB_PAGES === "true";
 
 const nextConfig = {
-    output: "export",
+    // Static export is only for GitHub Pages; Vercel uses default Next.js output
+    ...(isGithubPages ? { output: "export" } : {}),
     images: {
         unoptimized: true,
     },
