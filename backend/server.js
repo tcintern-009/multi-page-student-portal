@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { testConnection } from "./config/db.js";
+import { setupDatabase } from "./db/setup.js";
 import coursesRouter from "./routes/courses.js";
 import instructorsRouter from "./routes/instructors.js";
 import studentsRouter from "./routes/students.js";
@@ -47,6 +48,7 @@ app.use(errorHandler);
 
 async function startServer() {
     try {
+        await setupDatabase();
         await testConnection();
         console.log("PostgreSQL connected successfully");
 

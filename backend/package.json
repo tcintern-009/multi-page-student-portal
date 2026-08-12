@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch server.js",
+    "build": "npm install && node db/setup.js",
     "start": "node server.js",
-    "build": "npm install && npm install -g nodemon && npm install -g knex",
     "db:setup": "node db/setup.js",
     "db:seed": "node db/seed.js"
   },
