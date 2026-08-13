@@ -13,6 +13,8 @@ function mapDatabaseError(err) {
             err.status = 409;
             if (err.constraint?.includes("students_email")) {
                 err.message = "A student with this email already exists";
+            } else if (err.constraint?.includes("users_email")) {
+                err.message = "An account with this email already exists";
             } else if (err.constraint?.includes("courses_slug")) {
                 err.message = "A course with this slug already exists";
             } else if (err.constraint?.includes("enrollments")) {

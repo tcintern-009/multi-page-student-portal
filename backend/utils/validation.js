@@ -73,6 +73,37 @@ export function validateStudent(body, { partial = false } = {}) {
     return errors;
 }
 
+export function validateAuthRegister(body) {
+    const errors = [];
+
+    if (!isNonEmptyString(body.name)) errors.push("name is required");
+    if (!isNonEmptyString(body.email)) {
+        errors.push("email is required");
+    } else if (!isValidEmail(body.email.trim())) {
+        errors.push("email must be valid");
+    }
+    if (!isNonEmptyString(body.password)) {
+        errors.push("password is required");
+    } else if (body.password.length < 6) {
+        errors.push("password must be at least 6 characters");
+    }
+
+    return errors;
+}
+
+export function validateAuthLogin(body) {
+    const errors = [];
+
+    if (!isNonEmptyString(body.email)) {
+        errors.push("email is required");
+    } else if (!isValidEmail(body.email.trim())) {
+        errors.push("email must be valid");
+    }
+    if (!isNonEmptyString(body.password)) errors.push("password is required");
+
+    return errors;
+}
+
 export function validateEnrollment(body) {
     const errors = [];
 

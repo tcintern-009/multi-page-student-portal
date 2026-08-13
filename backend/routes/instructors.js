@@ -3,6 +3,7 @@ import { query } from "../config/db.js";
 import { parsePagination, buildPaginationMeta } from "../utils/pagination.js";
 import { validateInstructor, validationError } from "../utils/validation.js";
 import { formatInstructor } from "../utils/formatters.js";
+import { authenticate, authorize } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -95,8 +96,8 @@ router.get("/:id", async (req, res, next) => {
     }
 });
 
-// POST /api/instructors
-router.post("/", async (req, res, next) => {
+// POST /api/instructors — admin only
+router.post("/", authenticate, authorize("admin"), async (req, res, next) => {
     try {
         const errors = validateInstructor(req.body);
         if (errors.length) return next(validationError(errors));
@@ -126,8 +127,8 @@ router.post("/", async (req, res, next) => {
     }
 });
 
-// PUT /api/instructors/:id
-router.put("/:id", async (req, res, next) => {
+// PUT /api/instructors/:id — admin only
+router.put("/:id", authenticate, authorize("admin"), async (req, res, next) => {
     try {
         const existing = await findInstructorById(req.params.id);
         if (!existing) {
@@ -165,8 +166,8 @@ router.put("/:id", async (req, res, next) => {
     }
 });
 
-// DELETE /api/instructors/:id
-router.delete("/:id", async (req, res, next) => {
+// DELETE /api/instructors/:id — admin only
+router.delete("/:id", authenticate, authorize("admin"), async (req, res, next) => {
     try {
         const existing = await findInstructorById(req.params.id);
         if (!existing) {

@@ -2,23 +2,31 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 const navLinks = [
   { name: "Home", href: "/" },
   { name: "Courses", href: "/courses" },
   { name: "Instructors", href: "/instructors" },
-  { name: "Students", href: "/students" },
+  { name: "Students", href: "/students", adminOnly: true },
   { name: "Contact", href: "/contact" },
 ];
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, loading, isAuthenticated, isAdmin, logout } = useAuth();
+
+  const visibleLinks = navLinks.filter((link) => !link.adminOnly || isAdmin);
+
+  const handleLogout = async () => {
+    await logout();
+    setIsOpen(false);
+  };
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
               <svg
@@ -46,9 +54,8 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
+          <div className="hidden md:flex items-center space-x-6">
+            {visibleLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -57,15 +64,46 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <Link
-              href="/courses"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              Get Started
-            </Link>
+
+            {!loading && (
+              <>
+                {isAuthenticated ? (
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900">
+                        {user.name}
+                      </p>
+                      <p className="text-xs text-gray-500 capitalize">
+                        {user.role}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-3">
+                    <Link
+                      href="/login"
+                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100"
@@ -97,11 +135,10 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-4 py-3 space-y-2">
-            {navLinks.map((link) => (
+            {visibleLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -111,13 +148,45 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <Link
-              href="/courses"
-              onClick={() => setIsOpen(false)}
-              className="block px-3 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors text-center"
-            >
-              Get Started
-            </Link>
+
+            {!loading && (
+              <>
+                {isAuthenticated ? (
+                  <>
+                    <div className="px-3 py-2 text-sm text-gray-600">
+                      Signed in as{" "}
+                      <span className="font-medium text-gray-900">
+                        {user.name}
+                      </span>{" "}
+                      ({user.role})
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition-colors text-left"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      onClick={() => setIsOpen(false)}
+                      className="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition-colors"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setIsOpen(false)}
+                      className="block px-3 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors text-center"
+                    >
+                      Sign Up
+                    </Link>
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}

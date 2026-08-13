@@ -2,14 +2,35 @@
 // All frontend-backend communication goes through these functions.
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const TOKEN_KEY = "student_portal_token";
+
+export function getStoredToken() {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setStoredToken(token) {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearStoredToken() {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem(TOKEN_KEY);
+}
 
 async function request(path, options = {}) {
     const url = `${API_URL}${path}`;
 
+    const token = getStoredToken();
     const headers = {
         "Content-Type": "application/json",
         ...options.headers,
     };
+
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
 
     let response;
     try {
@@ -54,6 +75,33 @@ function buildQuery(params = {}) {
     });
     const query = searchParams.toString();
     return query ? `?${query}` : "";
+}
+
+// --- Auth ---
+
+export async function register({ name, email, password }) {
+    const data = await request("/auth/register", {
+        method: "POST",
+        body: JSON.stringify({ name, email, password }),
+    });
+    return data;
+}
+
+export async function login({ email, password }) {
+    const data = await request("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+    });
+    return data;
+}
+
+export async function fetchCurrentUser() {
+    const data = await request("/auth/me");
+    return data.user;
+}
+
+export async function logout() {
+    return request("/auth/logout", { method: "POST" });
 }
 
 // --- Courses ---

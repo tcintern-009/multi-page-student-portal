@@ -3,6 +3,7 @@ import { query } from "../config/db.js";
 import { parsePagination, buildPaginationMeta } from "../utils/pagination.js";
 import { validateStudent, validationError } from "../utils/validation.js";
 import { formatStudent } from "../utils/formatters.js";
+import { authenticate, authorize } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -11,8 +12,8 @@ async function findStudentById(id) {
     return result.rows[0] || null;
 }
 
-// GET /api/students
-router.get("/", async (req, res, next) => {
+// GET /api/students — admin only
+router.get("/", authenticate, authorize("admin"), async (req, res, next) => {
     try {
         const { page, limit, offset } = parsePagination(req.query);
         const { search } = req.query;
@@ -62,8 +63,8 @@ router.get("/", async (req, res, next) => {
     }
 });
 
-// GET /api/students/:id
-router.get("/:id", async (req, res, next) => {
+// GET /api/students/:id — admin only
+router.get("/:id", authenticate, authorize("admin"), async (req, res, next) => {
     try {
         const student = await findStudentById(req.params.id);
         if (!student) {
@@ -99,8 +100,8 @@ router.get("/:id", async (req, res, next) => {
     }
 });
 
-// POST /api/students
-router.post("/", async (req, res, next) => {
+// POST /api/students — admin only
+router.post("/", authenticate, authorize("admin"), async (req, res, next) => {
     try {
         const errors = validateStudent(req.body);
         if (errors.length) return next(validationError(errors));
@@ -118,8 +119,8 @@ router.post("/", async (req, res, next) => {
     }
 });
 
-// PUT /api/students/:id
-router.put("/:id", async (req, res, next) => {
+// PUT /api/students/:id — admin only
+router.put("/:id", authenticate, authorize("admin"), async (req, res, next) => {
     try {
         const existing = await findStudentById(req.params.id);
         if (!existing) {
@@ -150,8 +151,8 @@ router.put("/:id", async (req, res, next) => {
     }
 });
 
-// DELETE /api/students/:id
-router.delete("/:id", async (req, res, next) => {
+// DELETE /api/students/:id — admin only
+router.delete("/:id", authenticate, authorize("admin"), async (req, res, next) => {
     try {
         const existing = await findStudentById(req.params.id);
         if (!existing) {

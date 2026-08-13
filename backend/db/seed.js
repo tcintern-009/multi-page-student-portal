@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { setupDatabase, closePool } from "./setup.js";
 import { query } from "../config/db.js";
+import bcrypt from "bcryptjs";
 
 const instructors = [
     {
@@ -131,11 +132,27 @@ const students = [
     { name: "Usman Ali", email: "usman.ali@example.com", phone: "+92-302-3456789" },
 ];
 
+async function ensureAdminUser() {
+    const existing = await query("SELECT id FROM users WHERE email = $1", [
+        "admin@studentportal.com",
+    ]);
+    if (existing.rows.length > 0) return;
+
+    const passwordHash = await bcrypt.hash("admin123", 12);
+    await query(
+        `INSERT INTO users (name, email, password_hash, role)
+         VALUES ($1, $2, $3, 'admin')`,
+        ["Portal Admin", "admin@studentportal.com", passwordHash],
+    );
+    console.log("Admin user created: admin@studentportal.com / admin123");
+}
+
 async function seed() {
     await setupDatabase();
 
     const instructorCount = await query("SELECT COUNT(*)::int AS count FROM instructors");
     if (instructorCount.rows[0].count > 0) {
+        await ensureAdminUser();
         console.log("Database already seeded. Skipping seed data.");
         return;
     }
@@ -220,6 +237,7 @@ async function seed() {
         );
     }
 
+    await ensureAdminUser();
     console.log("Seed data inserted successfully.");
 }
 

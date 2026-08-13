@@ -1,3 +1,17 @@
+export function formatUser(row) {
+    if (!row) return null;
+
+    return {
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        role: row.role,
+        studentId: row.student_id ?? null,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+    };
+}
+
 export function formatInstructor(row) {
     if (!row) return null;
 

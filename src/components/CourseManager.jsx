@@ -11,8 +11,10 @@ import {
   updateCourse,
   deleteCourse,
 } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CourseManager() {
+  const { isAdmin } = useAuth();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -131,25 +133,27 @@ export default function CourseManager() {
           {courses.length} {courses.length === 1 ? "course" : "courses"}{" "}
           available
         </p>
-        <button
-          onClick={handleAdd}
-          className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <svg
-            className="w-5 h-5 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        {isAdmin && (
+          <button
+            onClick={handleAdd}
+            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Add Course
-        </button>
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Add Course
+          </button>
+        )}
       </div>
 
       {actionError && (
@@ -158,7 +162,7 @@ export default function CourseManager() {
         </div>
       )}
 
-      {showForm && (
+      {showForm && isAdmin && (
         <div className="mb-10">
           <CourseForm
             initialData={editingCourse}
@@ -172,15 +176,19 @@ export default function CourseManager() {
       {courses.length > 0 ? (
         <CourseSearch
           courses={courses}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+          onEdit={isAdmin ? handleEdit : undefined}
+          onDelete={isAdmin ? handleDelete : undefined}
         />
       ) : (
         <EmptyState
           title="No courses available"
-          message="Add your first course to get started."
-          actionLabel="Add Course"
-          onAction={handleAdd}
+          message={
+            isAdmin
+              ? "Add your first course to get started."
+              : "Check back soon for new courses."
+          }
+          actionLabel={isAdmin ? "Add Course" : undefined}
+          onAction={isAdmin ? handleAdd : undefined}
         />
       )}
     </div>

@@ -2,22 +2,20 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
 import Button from "@/components/Button";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import {
-  fetchCourseBySlug,
-  fetchStudents,
-  createStudent,
-  createEnrollment,
-} from "@/lib/api";
+import { fetchCourseBySlug, createEnrollment } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CourseDetail({ slug }) {
+  const router = useRouter();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showEnroll, setShowEnroll] = useState(false);
-  const [enrollForm, setEnrollForm] = useState({ name: "", email: "" });
   const [enrolling, setEnrolling] = useState(false);
   const [enrollMessage, setEnrollMessage] = useState(null);
   const [enrollError, setEnrollError] = useState(null);
@@ -50,6 +48,15 @@ export default function CourseDetail({ slug }) {
     return null;
   }
 
+  const handleEnrollClick = () => {
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=/courses/${slug}`);
+      return;
+    }
+    setShowEnroll(true);
+    setEnrollError(null);
+  };
+
   const handleEnroll = async (e) => {
     e.preventDefault();
     setEnrolling(true);
@@ -57,26 +64,9 @@ export default function CourseDetail({ slug }) {
     setEnrollMessage(null);
 
     try {
-      const students = await fetchStudents({ search: enrollForm.email.trim() });
-      let student = students.find(
-        (s) => s.email.toLowerCase() === enrollForm.email.trim().toLowerCase(),
-      );
-
-      if (!student) {
-        student = await createStudent({
-          name: enrollForm.name.trim(),
-          email: enrollForm.email.trim(),
-        });
-      }
-
-      await createEnrollment({
-        studentId: student.id,
-        courseSlug: course.slug,
-      });
-
+      await createEnrollment({ courseSlug: course.slug });
       setEnrollMessage("Successfully enrolled! Welcome to the course.");
       setShowEnroll(false);
-      setEnrollForm({ name: "", email: "" });
     } catch (err) {
       setEnrollError(err.message);
     } finally {
@@ -269,53 +259,30 @@ export default function CourseDetail({ slug }) {
                 )}
                 <Button
                   className="w-full mb-3"
-                  onClick={() => {
-                    setShowEnroll(true);
-                    setEnrollError(null);
-                  }}
+                  onClick={handleEnrollClick}
+                  disabled={authLoading}
                 >
-                  Enroll Now
+                  {isAuthenticated ? "Enroll Now" : "Login to Enroll"}
                 </Button>
                 <Button variant="outline" className="w-full">
                   Add to Cart
                 </Button>
 
-                {showEnroll && (
+                {showEnroll && isAuthenticated && (
                   <form
                     onSubmit={handleEnroll}
                     className="mt-6 pt-6 border-t border-gray-200 space-y-4"
                   >
-                    <h4 className="font-semibold text-gray-900">Enroll in this course</h4>
+                    <h4 className="font-semibold text-gray-900">
+                      Confirm enrollment
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      Enroll as <span className="font-medium">{user.name}</span>{" "}
+                      ({user.email})
+                    </p>
                     {enrollError && (
                       <p className="text-sm text-red-600">{enrollError}</p>
                     )}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Full Name
-                      </label>
-                      <input
-                        required
-                        value={enrollForm.name}
-                        onChange={(e) =>
-                          setEnrollForm((prev) => ({ ...prev, name: e.target.value }))
-                        }
-                        className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email
-                      </label>
-                      <input
-                        required
-                        type="email"
-                        value={enrollForm.email}
-                        onChange={(e) =>
-                          setEnrollForm((prev) => ({ ...prev, email: e.target.value }))
-                        }
-                        className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
                     <div className="flex gap-2">
                       <button
                         type="submit"

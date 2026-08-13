@@ -3,6 +3,7 @@ import { query } from "../config/db.js";
 import { parsePagination, buildPaginationMeta } from "../utils/pagination.js";
 import { validateEnrollment, validationError } from "../utils/validation.js";
 import { formatEnrollment } from "../utils/formatters.js";
+import { authenticate, authorize } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -119,13 +120,24 @@ router.get("/:id", async (req, res, next) => {
     }
 });
 
-// POST /api/enrollments
-router.post("/", async (req, res, next) => {
+// POST /api/enrollments — authenticated students enroll themselves
+router.post("/", authenticate, authorize("student", "admin"), async (req, res, next) => {
     try {
-        const errors = validateEnrollment(req.body);
+        const enrollmentBody = { ...req.body };
+
+        if (req.user.role === "student") {
+            if (!req.user.studentId) {
+                const error = new Error("Your account is not linked to a student profile");
+                error.status = 400;
+                return next(error);
+            }
+            enrollmentBody.studentId = req.user.studentId;
+        }
+
+        const errors = validateEnrollment(enrollmentBody);
         if (errors.length) return next(validationError(errors));
 
-        const { studentId, courseId, courseSlug, status } = req.body;
+        const { studentId, courseId, courseSlug, status } = enrollmentBody;
 
         const studentResult = await query("SELECT id FROM students WHERE id = $1", [studentId]);
         if (studentResult.rows.length === 0) {
@@ -150,8 +162,8 @@ router.post("/", async (req, res, next) => {
     }
 });
 
-// PUT /api/enrollments/:id
-router.put("/:id", async (req, res, next) => {
+// PUT /api/enrollments/:id — admin only
+router.put("/:id", authenticate, authorize("admin"), async (req, res, next) => {
     try {
         const existing = await findEnrollmentById(req.params.id);
         if (!existing) {
@@ -177,8 +189,8 @@ router.put("/:id", async (req, res, next) => {
     }
 });
 
-// DELETE /api/enrollments/:id
-router.delete("/:id", async (req, res, next) => {
+// DELETE /api/enrollments/:id — admin only
+router.delete("/:id", authenticate, authorize("admin"), async (req, res, next) => {
     try {
         const existing = await findEnrollmentById(req.params.id);
         if (!existing) {

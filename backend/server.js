@@ -7,6 +7,7 @@ import coursesRouter from "./routes/courses.js";
 import instructorsRouter from "./routes/instructors.js";
 import studentsRouter from "./routes/students.js";
 import enrollmentsRouter from "./routes/enrollments.js";
+import authRouter from "./routes/auth.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -17,7 +18,7 @@ app.use(
     cors({
         origin: process.env.NODE_ENV === "production" ? CLIENT_URL : "*",
         methods: ["GET", "POST", "PUT", "DELETE"],
-        allowedHeaders: ["Content-Type"],
+        allowedHeaders: ["Content-Type", "Authorization"],
     }),
 );
 app.use(express.json());
@@ -38,6 +39,7 @@ app.get("/api/health", async (req, res, next) => {
     }
 });
 
+app.use("/api/auth", authRouter);
 app.use("/api/courses", coursesRouter);
 app.use("/api/instructors", instructorsRouter);
 app.use("/api/students", studentsRouter);
