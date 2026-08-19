@@ -8,7 +8,9 @@ const navLinks = [
   { name: "Home", href: "/" },
   { name: "Courses", href: "/courses" },
   { name: "Instructors", href: "/instructors" },
+  { name: "My Enrollments", href: "/my-enrollments", authOnly: true },
   { name: "Students", href: "/students", adminOnly: true },
+  { name: "Users", href: "/admin/users", adminOnly: true },
   { name: "Contact", href: "/contact" },
 ];
 
@@ -16,7 +18,10 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, loading, isAuthenticated, isAdmin, logout } = useAuth();
 
-  const visibleLinks = navLinks.filter((link) => !link.adminOnly || isAdmin);
+  const visibleLinks = navLinks.filter(
+    (link) =>
+      (!link.adminOnly || isAdmin) && (!link.authOnly || isAuthenticated),
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -69,14 +74,14 @@ export default function Navbar() {
               <>
                 {isAuthenticated ? (
                   <div className="flex items-center space-x-4">
-                    <div className="text-right">
+                    <Link href="/profile" className="text-right hover:opacity-80 transition-opacity">
                       <p className="text-sm font-medium text-gray-900">
                         {user.name}
                       </p>
                       <p className="text-xs text-gray-500 capitalize">
                         {user.role}
                       </p>
-                    </div>
+                    </Link>
                     <button
                       onClick={handleLogout}
                       className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -153,6 +158,13 @@ export default function Navbar() {
               <>
                 {isAuthenticated ? (
                   <>
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsOpen(false)}
+                      className="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition-colors"
+                    >
+                      My Profile
+                    </Link>
                     <div className="px-3 py-2 text-sm text-gray-600">
                       Signed in as{" "}
                       <span className="font-medium text-gray-900">

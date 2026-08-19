@@ -219,6 +219,36 @@ export async function deleteEnrollment(id) {
     return request(`/enrollments/${id}`, { method: "DELETE" });
 }
 
+// --- Users (admin) ---
+
+export async function fetchUsers(params = {}) {
+    const data = await request(`/users${buildQuery(params)}`);
+    return data;
+}
+
+export async function updateUserRole(id, role) {
+    const data = await request(`/users/${id}/role`, {
+        method: "PATCH",
+        body: JSON.stringify({ role }),
+    });
+    return data.user;
+}
+
+// --- Student Profile (self) ---
+
+export async function fetchMyProfile() {
+    const data = await request("/students/me");
+    return data.student;
+}
+
+export async function updateMyProfile(profileData) {
+    const data = await request("/students/me", {
+        method: "PUT",
+        body: JSON.stringify(profileData),
+    });
+    return data.student;
+}
+
 // --- Health ---
 
 export async function fetchHealth() {

@@ -12,6 +12,88 @@ async function findStudentById(id) {
     return result.rows[0] || null;
 }
 
+// GET /api/students/me — students view their own profile
+router.get("/me", authenticate, async (req, res, next) => {
+    try {
+        if (!req.user.studentId) {
+            const error = new Error("Your account is not linked to a student profile");
+            error.status = 400;
+            return next(error);
+        }
+
+        const student = await findStudentById(req.user.studentId);
+        if (!student) {
+            const error = new Error("Student profile not found");
+            error.status = 404;
+            return next(error);
+        }
+
+        const enrollments = await query(
+            `SELECT e.*, c.slug AS course_slug, c.title AS course_title
+             FROM enrollments e
+             JOIN courses c ON e.course_id = c.id
+             WHERE e.student_id = $1
+             ORDER BY e.enrolled_at DESC`,
+            [student.id],
+        );
+
+        res.json({
+            student: {
+                ...formatStudent(student),
+                enrollments: enrollments.rows.map((row) => ({
+                    id: row.id,
+                    courseId: row.course_id,
+                    courseSlug: row.course_slug,
+                    courseTitle: row.course_title,
+                    status: row.status,
+                    enrolledAt: row.enrolled_at,
+                })),
+            },
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// PUT /api/students/me — students update their own profile
+router.put("/me", authenticate, async (req, res, next) => {
+    try {
+        if (!req.user.studentId) {
+            const error = new Error("Your account is not linked to a student profile");
+            error.status = 400;
+            return next(error);
+        }
+
+        const existing = await findStudentById(req.user.studentId);
+        if (!existing) {
+            const error = new Error("Student profile not found");
+            error.status = 404;
+            return next(error);
+        }
+
+        const errors = validateStudent(req.body);
+        if (errors.length) return next(validationError(errors));
+
+        const { name, email, phone } = req.body;
+
+        const result = await query(
+            `UPDATE students SET name = $1, email = $2, phone = $3, updated_at = NOW()
+             WHERE id = $4 RETURNING *`,
+            [name.trim(), email.trim().toLowerCase(), phone?.trim() || null, existing.id],
+        );
+
+        // Sync name/email to users table
+        await query(
+            `UPDATE users SET name = $1, email = $2, updated_at = NOW() WHERE student_id = $3`,
+            [name.trim(), email.trim().toLowerCase(), existing.id],
+        );
+
+        res.json({ student: formatStudent(result.rows[0]) });
+    } catch (err) {
+        next(err);
+    }
+});
+
 // GET /api/students — admin only
 router.get("/", authenticate, authorize("admin"), async (req, res, next) => {
     try {

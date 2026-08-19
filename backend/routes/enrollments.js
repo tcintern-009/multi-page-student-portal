@@ -47,8 +47,8 @@ async function findEnrollmentById(id) {
     return result.rows[0] || null;
 }
 
-// GET /api/enrollments
-router.get("/", async (req, res, next) => {
+// GET /api/enrollments — authenticated; students see only their own
+router.get("/", authenticate, async (req, res, next) => {
     try {
         const { page, limit, offset } = parsePagination(req.query);
         const { studentId, courseId, status } = req.query;
@@ -57,10 +57,18 @@ router.get("/", async (req, res, next) => {
         const conditions = [];
         const params = [];
 
-        if (studentId) {
+        // Students can only see their own enrollments
+        if (req.user.role === "student") {
+            if (!req.user.studentId) {
+                return res.json({ enrollments: [] });
+            }
+            params.push(req.user.studentId);
+            conditions.push(`e.student_id = $${params.length}`);
+        } else if (studentId) {
             params.push(Number(studentId));
             conditions.push(`e.student_id = $${params.length}`);
         }
+
         if (courseId) {
             params.push(Number(courseId));
             conditions.push(`e.course_id = $${params.length}`);
@@ -104,13 +112,19 @@ router.get("/", async (req, res, next) => {
     }
 });
 
-// GET /api/enrollments/:id
-router.get("/:id", async (req, res, next) => {
+// GET /api/enrollments/:id — authenticated; students can only view their own
+router.get("/:id", authenticate, async (req, res, next) => {
     try {
         const enrollment = await findEnrollmentById(req.params.id);
         if (!enrollment) {
             const error = new Error(`Enrollment with id ${req.params.id} not found`);
             error.status = 404;
+            return next(error);
+        }
+
+        if (req.user.role === "student" && enrollment.student_id !== req.user.studentId) {
+            const error = new Error("You do not have permission to view this enrollment.");
+            error.status = 403;
             return next(error);
         }
 
@@ -189,13 +203,19 @@ router.put("/:id", authenticate, authorize("admin"), async (req, res, next) => {
     }
 });
 
-// DELETE /api/enrollments/:id — admin only
-router.delete("/:id", authenticate, authorize("admin"), async (req, res, next) => {
+// DELETE /api/enrollments/:id — admin can delete any; students can cancel their own
+router.delete("/:id", authenticate, async (req, res, next) => {
     try {
         const existing = await findEnrollmentById(req.params.id);
         if (!existing) {
             const error = new Error(`Enrollment with id ${req.params.id} not found`);
             error.status = 404;
+            return next(error);
+        }
+
+        if (req.user.role === "student" && existing.student_id !== req.user.studentId) {
+            const error = new Error("You can only cancel your own enrollments.");
+            error.status = 403;
             return next(error);
         }
 
