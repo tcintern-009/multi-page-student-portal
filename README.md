@@ -2,6 +2,9 @@
 
 A full-stack student course portal with a Next.js frontend, Express.js backend API, and PostgreSQL database hosted on [Neon](https://neon.tech).
 
+# Live Link: 
+https://student-portal.digicert.digital
+
 ## Architecture
 
 ```
